@@ -2,20 +2,32 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>RopChecker ver.0.01</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>RopChecker ver.0.03</title>
   <style>
     /* * RopChecker
-     * ver. 0.01
+     * ver. 0.03
+     * Theme: Elegant Milk Tea (Bright & Pop)
      */
+    :root {
+      --bg-color: #fdf8f2;      /* ミルクフォーム・ホワイト */
+      --container-bg: #f5ece1;  /* ロイヤルミルクティー・ベージュ */
+      --accent-color: #8e5d52;   /* ティー・ブラウン */
+      --text-main: #5d4a44;      /* 茶葉・ダークブラウン */
+      --text-sub: #a68b81;       /* ミルクティー・グレー */
+      --input-bg: #ffffff;       /* 純白（ミルク） */
+      --shadow: 0 4px 12px rgba(142, 93, 82, 0.08);
+    }
+
     body, html {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #f0f0f2;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text-main);
     }
 
     .container {
@@ -23,38 +35,57 @@
       flex-direction: column;
       width: 100%;
       height: 100vh;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      box-sizing: border-box;
     }
 
     /* 共通セクション設定 */
     section {
       display: flex;
       flex-direction: column;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid rgba(142, 93, 82, 0.1);
       box-sizing: border-box;
       width: 100%;
+      overflow: hidden;
     }
 
     .section-header {
-      background-color: #e0e0e0;
-      font-size: 12px;
-      font-weight: bold;
-      padding: 2px 8px;
-      color: #333;
+      background-color: var(--container-bg);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 12px;
+      color: var(--accent-color);
       flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .version-display {
+      font-weight: 500;
+      font-size: 10px;
+      background: var(--bg-color);
+      padding: 2px 8px;
+      border-radius: 10px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
     }
 
     /* 段別の比率設定 0.5 : 2.5 : 3.5 : 5 */
     .section-1 {
       flex: 0.5;
-      background-color: #333;
-      color: white;
+      background-color: var(--bg-color);
+      color: var(--accent-color);
       justify-content: center;
       align-items: center;
-      border-bottom: none;
+      border-bottom: 2px solid var(--container-bg);
     }
     .section-1 .title-bar {
-      font-size: 16px;
-      font-weight: bold;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
 
     .section-2 {
@@ -68,6 +99,7 @@
     .section-4 {
       flex: 5;
       border-bottom: none;
+      background-color: #fff9f3;
     }
 
     /* 入力エリア設定 */
@@ -75,27 +107,40 @@
       flex: 1;
       width: 100%;
       border: none;
-      padding: 10px;
+      padding: 12px;
       box-sizing: border-box;
-      font-family: monospace;
-      font-size: 14px;
+      font-family: "SF Mono", "Input Mono", Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.5;
       resize: none;
       outline: none;
-      background-color: #fff;
+      background-color: var(--input-bg);
+      color: var(--text-main);
+      -webkit-appearance: none;
     }
 
     /* 差分表示エリア設定 */
     .diff-display {
       flex: 1;
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       box-sizing: border-box;
-      background-color: #fafafa;
-      font-family: monospace;
-      font-size: 14px;
+      background-color: var(--bg-color);
+      font-family: "SF Mono", Menlo, monospace;
+      font-size: 13px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-all;
+      color: var(--text-main);
+    }
+
+    /* POPなアクセント（スクロールバー等） */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--container-bg);
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -103,21 +148,29 @@
 
   <div class="container">
     <section class="section-1">
-      <div class="title-bar">RopChecker  ver.0.01</div>
+      <div class="title-bar">RopChecker <span style="font-size: 12px; font-weight: 400; opacity: 0.7;">ver.0.03</span></div>
     </section>
 
     <section class="section-2">
-      <div class="section-header">マスターコード</div>
-      <textarea id="master-code" placeholder="ここにマスターコードを貼り付けてください"></textarea>
+      <div class="section-header">
+        <span>Master Code</span>
+        <span id="master-ver" class="version-display"></span>
+      </div>
+      <textarea id="master-code" placeholder="Paste master code here..."></textarea>
     </section>
 
     <section class="section-3">
-      <div class="section-header">レビューコード</div>
-      <textarea id="review-code" placeholder="ここにレビューコードを貼り付けてください"></textarea>
+      <div class="section-header">
+        <span>Review Code</span>
+        <span id="review-ver" class="version-display"></span>
+      </div>
+      <textarea id="review-code" placeholder="Paste review code here..."></textarea>
     </section>
 
     <section class="section-4">
-      <div class="section-header">マスターコードとの差分</div>
+      <div class="section-header">
+        <span>Differences from Master</span>
+      </div>
       <div id="diff-output" class="diff-display"></div>
     </section>
   </div>
@@ -125,9 +178,57 @@
   <script>
     /**
      * RopChecker
-     * ver. 0.01
+     * ver. 0.03
      */
-    // 現時点ではレイアウトのみ。ロジックは次フェーズにて実装。
+    const masterInput = document.getElementById('master-code');
+    const reviewInput = document.getElementById('review-code');
+    const masterVerDisp = document.getElementById('master-ver');
+    const reviewVerDisp = document.getElementById('review-ver');
+    const diffOutput = document.getElementById('diff-output');
+
+    // バージョン抽出用の正規表現
+    const verRegex = /(?:ver\.?|version[:\s]|v)\s*([\d\.]+)/i;
+
+    // HTMLエスケープ関数（プログラムの動作を防止）
+    function escapeHTML(str) {
+      if (!str) return "";
+      return str.replace(/[&<>"']/g, function(m) {
+        return {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[m];
+      });
+    }
+
+    function updateVersion(inputElement, displayElement) {
+      const text = inputElement.value;
+      const match = text.match(verRegex);
+      if (match) {
+        displayElement.textContent = match[0];
+      } else {
+        displayElement.textContent = '';
+      }
+    }
+
+    // 差分表示のプレースホルダ更新（セキュリティ対応）
+    function updateDiffDisplay() {
+      // 現時点では入力を安全に4段目に反映させる（将来の差分ロジックの土台）
+      // エスケープ処理を介すことでHTMLとして実行されるのを防ぐ
+      const safeText = escapeHTML(reviewInput.value);
+      // 差分表示の実装は次フェーズ。現在は安全な文字列出力を担保。
+    }
+
+    masterInput.addEventListener('input', () => {
+      updateVersion(masterInput, masterVerDisp);
+    });
+
+    reviewInput.addEventListener('input', () => {
+      updateVersion(reviewInput, reviewVerDisp);
+      updateDiffDisplay();
+    });
   </script>
 </body>
 </html>

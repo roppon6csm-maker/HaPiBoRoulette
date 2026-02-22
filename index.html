@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>RopChecker ver.0.05</title>
+  <title>RopChecker ver.0.06</title>
   <style>
-    /* * RopChecker ver. 0.05
+    /* * RopChecker ver. 0.06
      * Theme: Elegant Milk Tea (Bright & Pop)
-     * Mode: AI-Code Integrity Inspector
+     * Mode: Intelligent Integrity Inspector (Dialogue Mode)
      */
     :root {
       --bg-color: #fdf8f2;
@@ -17,6 +17,7 @@
       --input-bg: #ffffff;
       --error-color: #d9534f;
       --ok-color: #5cb85c;
+      --card-bg: #ffffff;
     }
 
     body, html {
@@ -46,60 +47,84 @@
 
     .version-display { font-weight: 500; font-size: 9px; background: var(--bg-color); padding: 1px 6px; border-radius: 8px; }
 
+    /* 構成比率を 0.5 : 1.5 : 9.5 に変更 */
     .section-top { flex: 0.5; background-color: var(--bg-color); color: var(--accent-color); justify-content: center; align-items: center; border-bottom: 2px solid var(--container-bg); }
     .title-bar { font-size: 16px; font-weight: 800; }
 
-    .section-middle { flex: 6.0; flex-direction: row !important; background-color: var(--container-bg); }
+    .section-middle { flex: 1.5; flex-direction: row !important; background-color: var(--container-bg); }
     .editor-pane { flex: 1; display: flex; flex-direction: column; height: 100%; border-right: 1px solid rgba(142, 93, 82, 0.1); }
 
-    .section-bottom { flex: 5.0; border-bottom: none; background-color: #fffaf5; }
+    .section-bottom { flex: 9.5; border-bottom: none; background-color: #fffaf5; }
 
     textarea {
-      flex: 1; width: 100%; border: none; padding: 10px; box-sizing: border-box;
-      font-family: "SF Mono", Menlo, monospace; font-size: 11px;
-      line-height: 1.3; resize: none; outline: none;
+      flex: 1; width: 100%; border: none; padding: 8px; box-sizing: border-box;
+      font-family: "SF Mono", Menlo, monospace; font-size: 10px;
+      line-height: 1.2; resize: none; outline: none;
       background-color: var(--input-bg); color: var(--text-main);
     }
 
-    /* 自動検証レポート用スタイル */
+    /* 対話型インスペクター用スタイル */
     .inspector-report {
-      flex: 1; overflow-y: auto; padding: 12px; font-size: 12px; font-family: "SF Mono", monospace;
+      flex: 1; overflow-y: auto; padding: 15px; box-sizing: border-box;
     }
     .status-badge {
-      display: inline-block; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-bottom: 10px;
+      display: inline-block; padding: 4px 12px; border-radius: 6px; font-weight: 800; margin-bottom: 15px; font-size: 12px;
     }
     .status-ng { background: var(--error-color); color: white; }
     .status-ok { background: var(--ok-color); color: white; }
-    .missing-item { color: var(--error-color); border-left: 3px solid var(--error-color); padding-left: 8px; margin: 4px 0; font-size: 11px; white-space: pre-wrap; }
+    .status-wait { background: #ccc; color: white; }
+
+    /* 質問カード UI */
+    .question-card {
+      background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 12px;
+      box-shadow: 0 4px 6px rgba(142, 93, 82, 0.05); border: 1px solid rgba(142, 93, 82, 0.1);
+      animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .q-title { font-size: 11px; color: var(--accent-color); font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .q-body { font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+    .q-diff { background: #f8f8f8; padding: 8px; border-radius: 6px; font-family: monospace; font-size: 11px; margin-bottom: 12px; }
+    .old-val { color: var(--error-color); text-decoration: line-through; margin-right: 8px; }
+    .new-val { color: var(--ok-color); font-weight: bold; }
     
-    #save-status { position: fixed; top: 10px; right: 10px; font-size: 9px; color: var(--accent-color); opacity: 0; transition: opacity 0.3s; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn {
+      flex: 1; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
+    }
+    .btn-yes { background-color: var(--ok-color); color: white; }
+    .btn-no { background-color: var(--error-color); color: white; }
+    .btn:active { transform: scale(0.95); opacity: 0.8; }
+    .btn-yes.approved { background-color: #eee; color: #aaa; pointer-events: none; }
+
+    #save-status { position: fixed; top: 10px; right: 10px; font-size: 9px; color: var(--accent-color); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
   </style>
 </head>
 <body>
 
-  <div id="save-status">Saving...</div>
+  <div id="save-status">Saving DNA...</div>
 
   <div class="container">
     <section class="section-top">
-      <div class="title-bar">RopChecker <span style="font-size: 10px; opacity: 0.6;">ver.0.05</span></div>
+      <div class="title-bar">RopChecker <span style="font-size: 10px; opacity: 0.6;">ver.0.06</span></div>
     </section>
 
     <section class="section-middle">
       <div class="editor-pane">
         <div class="section-header"><span>Master (Sanctuary)</span><span id="master-ver" class="version-display"></span></div>
-        <textarea id="master-code" placeholder="Paste Master Source..."></textarea>
+        <textarea id="master-code" placeholder="Master DNA..."></textarea>
       </div>
       <div class="editor-pane">
         <div class="section-header"><span>AI Review (Candidate)</span><span id="review-ver" class="version-display"></span></div>
-        <textarea id="review-code" placeholder="Paste AI Review Source..."></textarea>
+        <textarea id="review-code" placeholder="Review Candidate..."></textarea>
       </div>
     </section>
 
     <section class="section-bottom">
-      <div class="section-header"><span>Integrity Inspection Report</span></div>
+      <div class="section-header"><span>Dialogue Integrity Inspection</span></div>
       <div id="diff-output" class="inspector-report">
-        <div class="status-badge" style="background:#ccc;">Waiting for Input...</div>
-        <p>Paste codes to start 100% integrity check.</p>
+        <div class="status-badge status-wait">Awaiting Input</div>
+        <p>コードを解析し、意図しない改変を抽出します。</p>
       </div>
     </section>
   </div>
@@ -112,57 +137,104 @@
     const reportOutput = document.getElementById('diff-output');
     const saveStatus = document.getElementById('save-status');
 
-    const verRegex = /(?:ver\.?|version[:\s]|v)\s*([\d\.]+)/i;
+    let approvedChanges = new Set();
     let saveTimeout;
 
-    function escapeHTML(str) {
-      if (!str) return "";
-      return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]));
-    }
+    // 属性抽出用正規表現（比率、色、サイズ、文言など）
+    const extractors = [
+      { id: 'flex-ratio', name: '画面構成の比率', regex: /flex:\s*([\d\.]+);/g, template: "比率が {old} から {new} に変更されています。" },
+      { id: 'color-hex', name: 'UIカラー定義', regex: /#[0-9a-fA-F]{3,6}/g, template: "色が {old} から {new} に変更されています。" },
+      { id: 'pixel-size', name: 'サイズ定義', regex: /\d+px/g, template: "サイズが {old} から {new} に変更されています。" }
+    ];
 
     function updateVersion(text, displayElement) {
-      const match = text.match(verRegex);
+      const match = text.match(/(?:ver\.?|version[:\s]|v)\s*([\d\.]+)/i);
       displayElement.textContent = match ? match[0] : '';
     }
 
     /**
-     * 100% Integrity Checker Logic
-     * マスターの各行（聖域）がレビューに含まれているかを厳格にチェック
+     * 対話型検閲エンジン
      */
-    function runIntegrityCheck() {
-      const masterLines = masterInput.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-      const reviewText = reviewInput.value;
-      const reviewLinesSet = new Set(reviewText.split(/\r?\n/).map(l => l.trim()));
+    function runDialogueInspection() {
+      const mText = masterInput.value;
+      const rText = reviewInput.value;
 
-      const missing = [];
-      
-      // 5万行クラスを高速走査（Setを使用）
-      masterLines.forEach(line => {
-        if (!reviewLinesSet.has(line)) {
-          missing.push(line);
-        }
-      });
-
-      renderReport(missing);
-    }
-
-    function renderReport(missing) {
-      if (!masterInput.value || !reviewInput.value) {
-        reportOutput.innerHTML = '<div class="status-badge" style="background:#ccc;">Ready</div><p>Comparison engine active.</p>';
+      if (!mText || !rText) {
+        reportOutput.innerHTML = '<div class="status-badge status-wait">Ready</div><p>コードを貼り付けてください。</p>';
         return;
       }
 
-      let html = '';
-      if (missing.length === 0) {
-        html = '<div class="status-badge status-ok">PASS</div>';
-        html += '<p style="color:var(--ok-color);">No deletions detected. All functions, UI styles, and security logics are preserved.</p>';
-      } else {
-        html = '<div class="status-badge status-ng">NG: DEGRADATION DETECTED</div>';
-        html += `<p>The following ${missing.length} elements are missing in the Review code:</p>`;
-        missing.slice(0, 100).forEach(item => {
-          html += `<div class="missing-item">[-] ${escapeHTML(item)}</div>`;
+      const diffs = [];
+
+      // 1. 各正規表現でプロパティをスキャン
+      extractors.forEach(ext => {
+        const mMatches = [...mText.matchAll(ext.regex)].map(m => m[0]);
+        const rMatches = [...rText.matchAll(ext.regex)].map(m => m[0]);
+
+        // インデックスごとに比較（順序が重要なため）
+        mMatches.forEach((mVal, idx) => {
+          const rVal = rMatches[idx];
+          if (rVal && mVal !== rVal) {
+            const changeId = `${ext.id}-${idx}-${mVal}-${rVal}`;
+            if (!approvedChanges.has(changeId)) {
+              diffs.push({
+                id: changeId,
+                category: ext.name,
+                msg: ext.template.replace('{old}', mVal).replace('{new}', rVal),
+                old: mVal,
+                new: rVal
+              });
+            }
+          }
         });
-        if (missing.length > 100) html += `<p>...and ${missing.length - 100} more items.</p>`;
+      });
+
+      // 2. 行の欠落チェック（デグレード検知）
+      const mLines = mText.split('\n').map(l => l.trim()).filter(l => l.length > 20); // 長い行に限定して意味を抽出
+      const rTextMin = rText.replace(/\s/g, '');
+      mLines.forEach((line, idx) => {
+        const lineMin = line.replace(/\s/g, '');
+        if (!rTextMin.includes(lineMin)) {
+          const changeId = `line-missing-${idx}`;
+          if (!approvedChanges.has(changeId)) {
+            diffs.push({
+              id: changeId,
+              category: "機能・ロジックの消失",
+              msg: "マスターにある以下の記述が見当たりません。削除されましたか？",
+              old: line,
+              new: "(削除済み)"
+            });
+          }
+        }
+      });
+
+      renderDialogue(diffs);
+    }
+
+    function approve(id) {
+      approvedChanges.add(id);
+      runDialogueInspection();
+    }
+
+    function renderDialogue(diffs) {
+      let html = '';
+      if (diffs.length === 0) {
+        html = '<div class="status-badge status-ok">PASS: 100% INTEGRITY</div>';
+        html += '<p>全ての変更が承認されたか、あるいはマスターと完全一致しています。倉庫への保管を許可します。</p>';
+      } else {
+        html = `<div class="status-badge status-ng">WAITING FOR DECISION: ${diffs.length} items</div>`;
+        diffs.forEach(d => {
+          html += `
+            <div class="question-card">
+              <div class="q-title">${d.category}</div>
+              <div class="q-body">${d.msg}</div>
+              <div class="q-diff"><span class="old-val">${d.old}</span> → <span class="new-val">${d.new}</span></div>
+              <div class="btn-group">
+                <button class="btn btn-yes" onclick="approve('${d.id}')">はい（意図的）</button>
+                <button class="btn btn-no" onclick="alert('修正が必要です。AIに再度指示してください。')">いいえ（改ざん）</button>
+              </div>
+            </div>`;
+        });
       }
       reportOutput.innerHTML = html;
     }
@@ -171,17 +243,14 @@
       saveStatus.style.opacity = 0;
       clearTimeout(saveTimeout);
       saveTimeout = setTimeout(() => {
-        // 保存
         try {
           localStorage.setItem('rop_master', masterInput.value);
           localStorage.setItem('rop_review', reviewInput.value);
           saveStatus.style.opacity = 1;
           setTimeout(() => saveStatus.style.opacity = 0, 1000);
         } catch (e) {}
-        
-        // 検証実行
-        runIntegrityCheck();
-      }, 1500); 
+        runDialogueInspection();
+      }, 1500);
     }
 
     window.addEventListener('load', () => {
@@ -189,7 +258,7 @@
       reviewInput.value = localStorage.getItem('rop_review') || '';
       updateVersion(masterInput.value, masterVerDisp);
       updateVersion(reviewInput.value, reviewVerDisp);
-      runIntegrityCheck();
+      runDialogueInspection();
     });
 
     [masterInput, reviewInput].forEach(el => {

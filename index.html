@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>RopChecker ver.0.08</title>
+  <title>RopChecker ver.0.09</title>
   <style>
-    /* * RopChecker ver. 0.08
+    /* * RopChecker ver. 0.09
      * Theme: Elegant Milk Tea (Bright & Pop)
-     * Mode: AI-Native + High-Speed Operator
+     * Mode: GitHub-Safe Secure AI Native
      */
     :root {
       --bg-color: #fdf8f2;
@@ -51,6 +51,7 @@
     .section-top { flex: 0.5; background-color: var(--bg-color); color: var(--accent-color); justify-content: center; align-items: center; border-bottom: 2px solid var(--container-bg); position: relative; }
     .title-bar { font-size: 16px; font-weight: 800; }
 
+    /* Security: Password type input for key */
     .api-config { position: absolute; right: 10px; display: flex; align-items: center; gap: 5px; }
     .api-input { 
       font-size: 10px; border: 1px solid var(--container-bg); padding: 2px 5px; border-radius: 4px; 
@@ -62,7 +63,6 @@
     .section-middle { flex: 1.5; flex-direction: row !important; background-color: var(--container-bg); position: relative; }
     .editor-pane { flex: 1; display: flex; flex-direction: column; height: 100%; border-right: 1px solid rgba(142, 93, 82, 0.1); position: relative; }
 
-    /* コピペ用←ボタン */
     .copy-arrow {
       position: absolute; left: 0; top: 50%; transform: translate(-50%, -50%);
       width: 28px; height: 28px; background: var(--accent-color); color: white;
@@ -101,7 +101,6 @@
     .btn-yes { background-color: var(--ok-color); color: white; }
     .btn-no { background-color: var(--error-color); color: white; }
 
-    /* Undoモーダル */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(142, 93, 82, 0.3); backdrop-filter: blur(2px);
@@ -132,9 +131,9 @@
 
   <div class="container">
     <section class="section-top">
-      <div class="title-bar">RopChecker <span style="font-size: 10px; opacity: 0.6;">ver.0.08</span></div>
+      <div class="title-bar">RopChecker <span style="font-size: 10px; opacity: 0.6;">ver.0.09</span></div>
       <div class="api-config">
-        <input type="password" id="api-key" class="api-input" placeholder="Gemini API Key...">
+        <input type="password" id="api-key" class="api-input" placeholder="Gemini API Key (No Save)">
         <span class="key-btn" onclick="document.getElementById('api-key').classList.toggle('show')">🔑</span>
       </div>
     </section>
@@ -177,14 +176,13 @@
     let saveTimeout;
     let masterCache = "";
 
-    // オートペースト機能
     async function handleAutoPaste(el) {
       if (el.value.length === 0) {
         try {
           const text = await navigator.clipboard.readText();
           el.value = text;
           scheduleSaveAndCheck();
-        } catch (err) { console.log("Paste blocked"); }
+        } catch (err) { console.log("Paste blocked or ignored"); }
       }
     }
 
@@ -213,7 +211,7 @@
     }
 
     async function runAIInspection(master, review, apiKey) {
-      if (!master || !review) return;
+      if (!master || !review || !apiKey) return;
       reportOutput.innerHTML = '<div style="font-size:12px; color:var(--ai-color);">解析中...</div>';
       const prompt = `あなたは厳格なフロントエンド品質管理官です。マスターとレビューの差分を分析し、人間（開発者）に問いかけるべき変更点を抽出してください。比率(flex)、色、サイズ、削除を特定し、「〜を変更したのは〜の意図ですか？」という口調でJSON配列で返してください。[{"id":"id","category":"カテゴリ","msg":"問いかけ","old":"旧","new":"新"}]`;
       try {
@@ -259,7 +257,7 @@
       saveTimeout = setTimeout(() => {
         localStorage.setItem('rop_master', masterInput.value);
         localStorage.setItem('rop_review', reviewInput.value);
-        localStorage.setItem('rop_api_key', apiKeyInput.value);
+        // Security: NEVER store API key in localStorage
         saveStatus.style.opacity = 1; setTimeout(() => saveStatus.style.opacity = 0, 1000);
         updateVersion(masterInput.value, masterVerDisp);
         updateVersion(reviewInput.value, reviewVerDisp);
@@ -273,7 +271,7 @@
     window.addEventListener('load', () => {
       masterInput.value = localStorage.getItem('rop_master') || '';
       reviewInput.value = localStorage.getItem('rop_review') || '';
-      apiKeyInput.value = localStorage.getItem('rop_api_key') || '';
+      // Security: API key input starts empty every time
       scheduleSaveAndCheck();
     });
 

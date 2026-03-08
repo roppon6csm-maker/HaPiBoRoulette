@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ハピボルーレット ver.1.6.2</title>
+    <title>ハピボルーレット ver.1.6.3</title>
     
     <script>
         const imgUrls = [
@@ -35,8 +35,10 @@
         .version-display { position: absolute; top: 10px; right: 45px; z-index: 200; font-size: 10px; opacity: 0.5; color: var(--text-color-dark); }
         .banner-container { width: 100%; max-width: 500px; margin: 0 auto; min-height: 50px; }
         .banner-container img { width: 100%; height: auto; display: block; border: none; }
-        .winner-board { background: rgba(255,255,255,0.8); margin: 10px auto; padding: 10px; border-radius: 8px; width: 94%; max-width: 480px; border: 1px solid #ccc; box-sizing: border-box; }
-        .winner-grid { display: grid; gap: 5px; text-align: left; }
+        
+        /* 🏆 当選者枠の固定 (4x2, 10px) */
+        .winner-board { background: rgba(255,255,255,0.8); margin: 10px auto; padding: 10px; border-radius: 8px; width: 94%; max-width: 480px; border: 1px solid #ccc; box-sizing: border-box; min-height: 80px; }
+        .winner-grid { display: grid; gap: 5px; text-align: left; grid-template-columns: repeat(2, 1fr); font-size: 10px; }
         .winner-item { border-left: 3px solid var(--accent-color); background: rgba(236,204,104,0.1); padding-left: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.5em; line-height: 1.5em; }
         
         .slot-machine { background: var(--slot-machine-color); border: 6px solid var(--accent-color); border-radius: 15px; width: 94%; max-width: 480px; margin: 15px auto; padding: 15px 5px; box-sizing: border-box; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
@@ -67,7 +69,6 @@
         input:checked + .slider { background-color: #2196F3; }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* リザルト演出用CSS */
         .result-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; pointer-events: auto; }
         .result-content { width: 90%; max-width: 400px; padding: 30px 10px; border-radius: 20px; text-align: center; animation: modalPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; margin-top: -100px; }
         @keyframes modalPop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -76,7 +77,6 @@
         .result-images img { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; border: 2px solid rgba(255,255,255,0.5); background: #fff; }
         .close-result-btn { background: #333; color: #fff; border: none; padding: 15px 40px; border-radius: 50px; font-size: 1.1rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #000; }
         
-        /* 結果別デザイン */
         .res-bigwin { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); border: 4px solid #fff; box-shadow: 0 0 30px #f6d365; }
         .res-smallwin { background: linear-gradient(135deg, #e6e9f0 0%, #eef1f5 100%); border: 4px solid #fff; box-shadow: 0 0 20px #fff; }
         .res-lose { background: #fff; border: 4px solid #ccc; }
@@ -84,7 +84,7 @@
 </head>
 <body>
     <div id="toast" class="toast"></div>
-    <div class="version-display">ver.1.6.2</div>
+    <div class="version-display">ver.1.6.3</div>
     <div class="settings-trigger" onclick="openModal()">⚙️</div>
     
     <div id="resultOverlay" class="result-overlay">
@@ -179,10 +179,10 @@
 
     let resultData = null; let stoppedCount = 0; let isProcessing = false;
     let config = { 
-        title: "🏆", rows: 3, cols: 1, fontSize: 13,
+        title: "🏆", rows: 4, cols: 2, fontSize: 10,
         winP: 10, winL: 7, smallP: 10, smallL: 7, loseP: 80
     };
-    let currentWinners = [];
+    let currentWinners = []; // サーバーから返ってくる [{name, type}, ...] 形式を想定
     let sessionStopChars = ["", "", ""];
 
     function showToast(msg) {
@@ -219,17 +219,18 @@
             const res = await fetch(`${API_URL}?name=${encodeURIComponent(name)}&action=check`);
             resultData = await res.json();
             
-            // サーバー判定が当たりの場合は大当たり確定。ハズレの場合はフロント予備抽選。
             const isBigWin = (resultData.result === "当たり");
-            const isSmallWin = (!isBigWin && Math.random() < 0.15); // 暫定15%
+            const isSmallWin = (!isBigWin && Math.random() < 0.15); 
 
             if (isBigWin) {
                 sessionStopChars = ["ハ", "ピ", "ボ"];
-                await fetch(`${API_URL}?name=${encodeURIComponent(name)}&action=confirm`);
+                // C列書き分け: type=大当たり
+                await fetch(`${API_URL}?name=${encodeURIComponent(name)}&action=confirm&type=${encodeURIComponent("大当たり")}`);
             } else if (isSmallWin) {
                 const color = girlColors[Math.floor(Math.random() * girlColors.length)];
                 sessionStopChars = [color, color, color];
-                await fetch(`${API_URL}?name=${encodeURIComponent(name)}&action=confirm`);
+                // C列書き分け: type=小当たり
+                await fetch(`${API_URL}?name=${encodeURIComponent(name)}&action=confirm&type=${encodeURIComponent("小当たり")}`);
             } else {
                 do {
                     sessionStopChars = [
@@ -279,7 +280,6 @@
         content.className = 'result-content';
         imgDiv.innerHTML = sessionStopChars.map(c => `<img src="${imgs[c]}">`).join('');
         
-        // フォントサイズを画面幅に合わせて調整（折り返し防止）
         const vw = window.innerWidth / 100;
         text.style.fontSize = (vw * 8) + "px";
 
@@ -318,7 +318,7 @@
         try {
             const res = await fetch(`${API_URL}?action=getBoard`);
             const data = await res.json();
-            currentWinners = data.winners || [];
+            currentWinners = data.winners || []; // サーバーからは [{name:"...", type:"大当たり"}, ...] が来ると想定
             if (data.config) {
                 Object.assign(config, data.config);
             }
@@ -329,15 +329,28 @@
     function renderWinnerBoard() {
         const list = document.getElementById('winnerList');
         if(!list) return;
+        
+        // レイアウト固定
         list.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
         list.style.fontSize = `${config.fontSize}px`;
         document.getElementById('wb-title').innerText = config.title;
+
+        // 小当たりを除外し、大当たり（type === "大当たり"）のみを抽出
+        // サーバーが単純な文字列配列を返す場合は、API側で選別済みである必要がありますが、
+        // フロントでも安全のためにフィルタリングします。
+        const bigWinnersOnly = currentWinners.filter(w => {
+            if (typeof w === 'string') return true; // 互換性維持
+            return w.type === "大当たり";
+        }).map(w => typeof w === 'string' ? w : w.name);
+
         let html = '';
-        const rowsCount = parseInt(config.rows) || 1;
-        const colsCount = parseInt(config.cols) || 1;
+        const rowsCount = parseInt(config.rows) || 4;
+        const colsCount = parseInt(config.cols) || 2;
         const totalSlots = rowsCount * colsCount;
+        
         for (let k = 0; k < totalSlots; k++) {
-            html += `<div class="winner-item">${currentWinners[k] ? '🎊 ' + currentWinners[k] : ''}</div>`;
+            const name = bigWinnersOnly[k] || "";
+            html += `<div class="winner-item">${name ? '🎊 ' + name : ''}</div>`;
         }
         list.innerHTML = html;
     }
@@ -430,6 +443,7 @@
     }
     
     window.onload = async () => { 
+        renderWinnerBoard(); // 初期描画(4x2)
         initReels(); 
         await updateWinners();
         setInterval(updateWinners, 5000); 

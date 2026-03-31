@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>ハピボルーレット ver.3.5.9</title>
+    <title>ハピボルーレット ver.3.6.0</title>
     
     <link rel="preload" as="image" href="https://i.imgur.com/dyeH1D6.jpeg">
     <link rel="preload" as="image" href="https://i.imgur.com/skWZ5bB.png">
@@ -58,14 +58,23 @@
         .pw-name-input:disabled { opacity: 0.3; background: #111; border-color: #333; }
         .pw-ok-btn { padding: 12px; border-radius: 50px; border: none; background: var(--accent-color); color: #333; font-weight: bold; font-size: 16px; cursor: pointer; display: none; }
 
-        #practiceModeLabel { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); display: none; color: #ff4757; font-size: 16px; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.8), 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000; pointer-events: none; z-index: 100; white-space: nowrap; background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 4px; }
+        /* 練習モードラベル：2pxアップ */
+        #practiceModeLabel { position: absolute; top: 0; left: 50%; transform: translate(-50%, -50%); display: none; color: #ff4757; font-size: 18px; font-weight: bold; text-shadow: 0 0 10px rgba(255,255,255,0.8), 2px 2px 0 #000, -2px 2px 0 #000, 2px -2px 0 #000, -2px -2px 0 #000; pointer-events: none; z-index: 100; white-space: nowrap; background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 4px; }
 
         .version-display { position: absolute; top: 10px; right: 15px; z-index: 200; font-size: 10px; opacity: 0.5; color: var(--text-color-dark); }
         .banner-container { width: 100%; max-width: 500px; margin: 0 auto; min-height: 50px; position: relative; }
         .banner-container img { width: 100%; height: auto; display: block; border: none; }
+        
         .winner-board { background: rgba(255,255,255,0.8); margin: 10px auto; padding: 10px; border-radius: 8px; width: 94%; max-width: 480px; border: 1px solid #ccc; box-sizing: border-box; min-height: 80px; }
+        
+        /* ボードタイトル：確率追加とサイズアップ対応 */
+        #wb-title { color: #666; margin-bottom: 5px; font-weight: bold; line-height: 1.3; }
+        .prob-display { font-size: 10px; color: #888; font-weight: normal; margin-bottom: 2px; }
+        .title-main { font-size: 1.0rem; }
+
         .winner-grid { display: grid; gap: 5px; text-align: left; grid-template-columns: repeat(2, 1fr); font-size: 10px; }
         .winner-item { border-left: 3px solid var(--accent-color); background: rgba(236,204,104,0.1); padding-left: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.5em; line-height: 1.5em; }
+        
         .slot-machine { background: var(--slot-machine-color); border: 6px solid var(--accent-color); border-radius: 15px; width: 94%; max-width: 480px; margin: 15px auto; padding: 15px 5px; box-sizing: border-box; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
         .reels-container { display: flex; justify-content: space-around; background: #000; padding: 8px; border-radius: 10px; height: 25vw; max-height: 120px; border: 2px solid #57606f; box-sizing: border-box; }
         .reel-window { width: 30%; height: 100%; background: #fff; border-radius: 5px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
@@ -150,14 +159,17 @@
     </div>
 
     <div id="toast" class="toast"></div>
-    <div class="version-display">ver.3.5.9</div>
+    <div class="version-display">ver.3.6.0</div>
     
     <canvas id="confetti"></canvas>
     <div class="banner-container" id="mainBanner">
         <img src="https://i.imgur.com/skWZ5bB.png" alt="Banner">
     </div>
     <div class="winner-board">
-        <div id="wb-title" style="font-size: 0.8rem; color: #666; margin-bottom: 5px; font-weight: bold;">🏆</div>
+        <div id="wb-title">
+            <div class="prob-display">(当選確率10%)</div>
+            <div class="title-main">🏆</div>
+        </div>
         <div id="winnerList" class="winner-grid"></div>
     </div>
     <div class="slot-machine">
@@ -209,7 +221,6 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbw9hlHzP4p5rDA2vlGClhDchnjYPw_TXq4uwu-xDql6i7MW5Fmfe-9Iz8kguCvyawH6QQ/exec";
     const imgs = { "ハ": "https://i.imgur.com/dyeH1D6.jpeg", "ピ": "https://i.imgur.com/Q4h6Sdv.jpeg", "ボ": "https://i.imgur.com/xFq6HON.jpeg", "ク": "https://i.imgur.com/rnoZlTb.jpeg", "ー": "https://i.imgur.com/WVA6hdU.jpeg", "ス": "https://i.imgur.com/qT7Cbn3.jpeg", "ツ": "https://i.imgur.com/Pq8kdam.jpeg", "緑": "https://i.imgur.com/F84QLmL.png", "赤": "https://i.imgur.com/bSPZH8v.png", "白": "https://i.imgur.com/zsVs8tV.png", "紫": "https://i.imgur.com/QoEnzAy.png", "ピンク": "https://i.imgur.com/wUXQD9g.png", "青": "https://i.imgur.com/sDvV2zp.png", "黄": "https://i.imgur.com/0nr5ml8.png", "オレンジ": "https://i.imgur.com/R6OY57k.png" };
     
-    // ランク別の色リスト定義
     const upperColors = ["ピンク", "黄", "紫", "赤"];
     const lowerColors = ["白", "緑", "青", "オレンジ"];
     const dummyImgs = Object.values(imgs);
@@ -262,15 +273,12 @@
         }
         
         const resStr = resultData.result;
-        // 【演出統一】ランクと色の紐付け
         if (resStr === "当たり") { 
             sessionStopChars = ["ハ", "ピ", "ボ"]; 
         } else if (resStr === "小当たり") {
-            // 「当たり」演出（上位色）
             const c = upperColors[Math.floor(Math.random() * upperColors.length)]; 
             sessionStopChars = [c, c, c]; 
         } else {
-            // 「小当たり」演出（下位色）
             const c = lowerColors[Math.floor(Math.random() * lowerColors.length)]; 
             sessionStopChars = [c, c, c]; 
         }
@@ -317,7 +325,6 @@
         let fTitle = ""; 
         let prizeHTML = "";
 
-        // 【最終タイトル・景品マッピング】
         if (res === "当たり") {
             fTitle = "大当たり！おめでとう！";
             prizeHTML = isPracticeMode ? "<div>練習モードなので景品はありません</div>" 
@@ -327,7 +334,7 @@
             prizeHTML = isPracticeMode ? "<div>練習モードなので景品はありません</div>" 
                         : "<div>お好きな缶詰1つ</div><small>+うまい棒2本</small>";
         } else {
-            fTitle = "小当たり！おめでとう！"; // 本番ハズレ & 練習ハズレ昇格
+            fTitle = "小当たり！おめでとう！";
             prizeHTML = isPracticeMode ? "<div>練習モードなので景品はありません</div>" 
                         : "<div>蒲焼さん太郎1つ</div><small>(在庫により銘柄変更あり)</small>";
         }
@@ -403,14 +410,26 @@
             renderWinnerBoard();
         } catch (e) {}
     }
+
+    // ボードタイトルの差し込み修正箇所
     function renderWinnerBoard() {
         const list = document.getElementById('winnerList'); if(!list) return;
-        list.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`; list.style.fontSize = `${config.fontSize}px`; document.getElementById('wb-title').innerText = config.title;
+        list.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`; 
+        list.style.fontSize = `${config.fontSize}px`; 
+        
+        // タイトル表示（確率の追加とサイズアップ）
+        const titleArea = document.getElementById('wb-title');
+        titleArea.innerHTML = `
+            <div class="prob-display">(当選確率10%)</div>
+            <div class="title-main">${config.title}</div>
+        `;
+
         const bigOnly = currentWinners.filter(w => w.type === "当たり").map(w => w.name);
         let html = ''; const totalSlots = (parseInt(config.rows) || 4) * (parseInt(config.cols) || 2);
         for (let k = 0; k < totalSlots; k++) { const name = bigOnly[k] || ""; html += `<div class="winner-item">${name ? '🎊 ' + name : ''}</div>`; }
         list.innerHTML = html;
     }
+
     function startConfetti() { const canvas = document.getElementById("confetti"); const ctx = canvas.getContext("2d"); canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         let p = Array.from({length:80}, () => ({x:Math.random()*canvas.width, y:-20, s:Math.random()*8+4, c:`hsl(${Math.random()*360},100%,50%)`, sp:Math.random()*6+3})); drawP(); function drawP() { ctx.clearRect(0,0,canvas.width,canvas.height);
         p.forEach(i => { ctx.fillStyle=i.c; ctx.fillRect(i.x, i.y+=i.sp, i.s, i.s); if(i.y>canvas.height) i.y=-20; }); if(p.length>0) requestAnimationFrame(drawP); } setTimeout(() => p = [], 4000);
@@ -500,4 +519,3 @@
 </script>
 </body>
 </html>
-
